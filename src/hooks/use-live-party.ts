@@ -1,17 +1,28 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { studioSnapshot, useStudioStore } from "@/lib/domain/store";
-import { createParty, fetchParty, partyIdFromLocation, partyPath, saveParty } from "@/lib/live/api";
+import {
+  createParty,
+  fetchParty,
+  PartyRequestError,
+  partyIdFromLocation,
+  partyPath,
+  saveParty,
+} from "@/lib/live/api";
+import { createPersistQueue, type SaveStatus } from "@/lib/live/persist";
 
 export type LiveStatus = "connecting" | "live" | "local";
+export type { SaveStatus };
 
 export function useLiveParty() {
   const [partyId, setPartyId] = useState<string | null>(null);
   const [status, setStatus] = useState<LiveStatus>("connecting");
   const [updatedAt, setUpdatedAt] = useState(0);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const remote = useRef(false);
-  const revision = useRef(0);
+  const updatedAtRef = useRef(0);
   const hydrated = useStudioStore((state) => state.hydrated);
 
   useEffect(() => {
@@ -20,21 +31,39 @@ export function useLiveParty() {
     const boot = async () => {
       try {
         const existing = partyIdFromLocation();
-        const record = existing ? await fetchParty(existing) : await createParty();
-        if (cancelled) return;
-        if (!existing) {
-          window.history.replaceState(null, "", partyPath(record.id));
+        let record;
+        if (existing) {
+          try {
+            record = await fetchParty(existing);
+          } catch (error) {
+            if (!(error instanceof PartyRequestError) || error.status !== 404) {
+              throw error;
+            }
+            record = await createParty();
+            if (!cancelled) {
+              window.history.replaceState(null, "", partyPath(record.id));
+              toast.message("That table was gone. Opened a new one.");
+            }
+          }
+        } else {
+          record = await createParty();
+          if (!cancelled) {
+            window.history.replaceState(null, "", partyPath(record.id));
+          }
         }
+        if (cancelled) return;
         remote.current = true;
         useStudioStore.getState().hydrateWorkspace(record.workspace);
         remote.current = false;
         setPartyId(record.id);
+        updatedAtRef.current = record.updatedAt;
         setUpdatedAt(record.updatedAt);
         setStatus("live");
       } catch {
         if (cancelled) return;
         useStudioStore.getState().setHydrated(true);
         setStatus("local");
+        toast.error("Couldn't reach the live table. Working on this device only.");
       }
     };
 
@@ -47,54 +76,53 @@ export function useLiveParty() {
   useEffect(() => {
     if (!partyId || !hydrated || status !== "live") return;
 
-    let timer: number | undefined;
-    const push = () => {
-      window.clearTimeout(timer);
-      timer = window.setTimeout(() => {
-        if (remote.current) return;
-        const next = revision.current;
-        void saveParty(partyId, studioSnapshot(), updatedAt)
-          .then((record) => {
-            if (revision.current !== next) return;
-            setUpdatedAt(record.updatedAt);
-          })
-          .catch((error: Error & { current?: { workspace: ReturnType<typeof studioSnapshot>; updatedAt: number } }) => {
-            if (error.message === "stale" && error.current) {
-              remote.current = true;
-              useStudioStore.getState().hydrateWorkspace(error.current.workspace);
-              setUpdatedAt(error.current.updatedAt);
-              remote.current = false;
-            }
-          });
-      }, 350);
-    };
+    const queue = createPersistQueue({
+      save: (baseUpdatedAt) => saveParty(partyId, studioSnapshot(), baseUpdatedAt),
+      onStatus: setSaveStatus,
+      onError: (error) => {
+        const stale = error instanceof PartyRequestError && error.status === 409;
+        toast.error(
+          stale
+            ? "Couldn't save. Reload if the table looks wrong."
+            : "Couldn't save the table. Try another edit.",
+        );
+      },
+    });
+    queue.setBaseUpdatedAt(updatedAtRef.current);
 
     const unsub = useStudioStore.subscribe((state, previous) => {
       if (remote.current) return;
       if (state.pendingApproval || previous.pendingApproval) return;
       if (state === previous) return;
-      revision.current += 1;
-      push();
+      queue.markDirty();
     });
 
     const poll = window.setInterval(() => {
       void fetchParty(partyId)
         .then((record) => {
-          if (record.updatedAt <= updatedAt) return;
+          if (!queue.applyRemoteIfClean(record.updatedAt)) return;
           remote.current = true;
           useStudioStore.getState().hydrateWorkspace(record.workspace);
+          updatedAtRef.current = record.updatedAt;
           setUpdatedAt(record.updatedAt);
           remote.current = false;
         })
         .catch(() => undefined);
     }, 2000);
 
+    const onHide = () => {
+      void queue.flush();
+    };
+    window.addEventListener("pagehide", onHide);
+
     return () => {
       unsub();
-      window.clearTimeout(timer);
+      window.removeEventListener("pagehide", onHide);
       window.clearInterval(poll);
+      void queue.flush();
+      queue.dispose();
     };
-  }, [partyId, hydrated, status, updatedAt]);
+  }, [partyId, hydrated, status]);
 
-  return { partyId, status, updatedAt };
+  return { partyId, status, updatedAt, saveStatus };
 }
