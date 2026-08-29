@@ -1,12 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowUp, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
-import { runHostAgent, SUGGESTED_PROMPTS } from "@/lib/agent/host-agent";
+import { runDeskTurn, SUGGESTED_PROMPTS } from "@/lib/agent/host-agent";
 import type { AgentStep } from "@/lib/agent/host-agent";
 import type { ModelContext, RegisteredTool } from "@/lib/webmcp/types";
 import { cn } from "@/lib/utils";
@@ -28,6 +27,11 @@ export function AgentDesk({ ctx, native, tools }: AgentDeskProps) {
   const [prompt, setPrompt] = useState("");
   const [busy, setBusy] = useState(false);
   const [inspector, setInspector] = useState(false);
+  const seq = useRef(0);
+  const nextId = (prefix: string) => {
+    seq.current += 1;
+    return `${prefix}-${seq.current}`;
+  };
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "hello",
@@ -35,48 +39,45 @@ export function AgentDesk({ ctx, native, tools }: AgentDeskProps) {
       text: "I am the sous-chef on this page. I only act through WebMCP tools — the same ones ChatGPT and Chrome see. Give me a night, a budget, and the people who cannot sit together.",
     },
   ]);
+  const endRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ block: "end" });
+  }, [messages]);
 
   const send = async (text: string) => {
     const trimmed = text.trim();
-    if (!trimmed || !ctx || busy) return;
+    if (!trimmed) return;
+    const wasBusy = busy;
     setPrompt("");
-    setBusy(true);
-    const user: Message = { id: `u-${Date.now()}`, role: "user", text: trimmed };
-    const agentId = `a-${Date.now()}`;
+    const agentId = nextId("a");
     setMessages((current) => [
       ...current,
-      user,
+      { id: nextId("u"), role: "user", text: trimmed },
       { id: agentId, role: "agent", text: "Working the table…", steps: [] },
     ]);
-
+    if (!wasBusy) setBusy(true);
     try {
-      const { reply, steps } = await runHostAgent(trimmed, ctx, (step) => {
-        setMessages((current) =>
-          current.map((message) =>
-            message.id === agentId
-              ? { ...message, steps: [...(message.steps ?? []), step] }
-              : message,
-          ),
-        );
+      const turn = await runDeskTurn(trimmed, ctx, {
+        busy: wasBusy,
+        onStep: (step) => {
+          setMessages((current) =>
+            current.map((message) =>
+              message.id === agentId
+                ? { ...message, steps: [...(message.steps ?? []), step] }
+                : message,
+            ),
+          );
+        },
       });
+      if (!turn) return;
       setMessages((current) =>
         current.map((message) =>
-          message.id === agentId ? { ...message, text: reply, steps } : message,
-        ),
-      );
-    } catch (error) {
-      setMessages((current) =>
-        current.map((message) =>
-          message.id === agentId
-            ? {
-                ...message,
-                text: error instanceof Error ? error.message : "The sous-chef stalled.",
-              }
-            : message,
+          message.id === agentId ? { ...message, text: turn.reply, steps: turn.steps } : message,
         ),
       );
     } finally {
-      setBusy(false);
+      if (!wasBusy) setBusy(false);
     }
   };
 
@@ -104,7 +105,7 @@ export function AgentDesk({ ctx, native, tools }: AgentDeskProps) {
       </div>
 
       {inspector ? (
-        <ScrollArea className="h-40 border-b border-border">
+        <div className="h-40 overflow-y-auto border-b border-border">
           <ul className="space-y-2 p-3">
             {tools.map((tool) => (
               <li key={tool.name} className="text-xs">
@@ -113,10 +114,10 @@ export function AgentDesk({ ctx, native, tools }: AgentDeskProps) {
               </li>
             ))}
           </ul>
-        </ScrollArea>
+        </div>
       ) : null}
 
-      <ScrollArea className="min-h-0 flex-1">
+      <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="space-y-4 p-4">
           {messages.map((message) => (
             <div
@@ -141,18 +142,23 @@ export function AgentDesk({ ctx, native, tools }: AgentDeskProps) {
               ) : null}
             </div>
           ))}
+          <div ref={endRef} />
         </div>
-      </ScrollArea>
+      </div>
 
       <div className="border-t border-border p-3">
+        <p className="mb-1.5 text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
+          Suggestions. Click one to send it.
+        </p>
         <div className="mb-2 flex gap-1 overflow-x-auto pb-1">
           {SUGGESTED_PROMPTS.map((item) => (
             <button
               key={item}
               type="button"
-              disabled={busy || !ctx}
+              disabled={busy}
+              title={item}
               onClick={() => void send(item)}
-              className="shrink-0 rounded-full bg-muted px-2.5 py-1 text-left text-[11px] leading-4 text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-50"
+              className="max-w-[11rem] shrink-0 truncate rounded-full border border-border bg-background px-2.5 py-1 text-left text-[11px] leading-4 text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-50"
             >
               {item}
             </button>
@@ -166,6 +172,7 @@ export function AgentDesk({ ctx, native, tools }: AgentDeskProps) {
           }}
         >
           <Textarea
+            name="souschef"
             value={prompt}
             onChange={(event) => setPrompt(event.target.value)}
             placeholder="Plan Saturday for eight…"
@@ -178,7 +185,7 @@ export function AgentDesk({ ctx, native, tools }: AgentDeskProps) {
               }
             }}
           />
-          <Button type="submit" size="icon" disabled={busy || !ctx || !prompt.trim()}>
+          <Button type="submit" size="icon" disabled={busy || !prompt.trim()}>
             {busy ? <Loader2 className="size-4 animate-spin" /> : <ArrowUp className="size-4" />}
             <span className="sr-only">Send</span>
           </Button>
