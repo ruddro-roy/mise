@@ -12,4 +12,13 @@ export function createMemoryPartyStore(seed = new Map<string, PartyRecord>()): P
   };
 }
 
-export const localMemoryStore = createMemoryPartyStore();
+const root = globalThis as typeof globalThis & {
+  __miseParties?: Map<string, PartyRecord>;
+};
+
+function sharedRows(): Map<string, PartyRecord> {
+  if (!root.__miseParties) root.__miseParties = new Map();
+  return root.__miseParties;
+}
+
+export const localMemoryStore = createMemoryPartyStore(sharedRows());
