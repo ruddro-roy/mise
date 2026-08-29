@@ -28,8 +28,25 @@ function identity(c: { req: { header: (name: string) => string | undefined } }) 
   return { email, name };
 }
 
+function createPartyWriteLock() {
+  const tail = new Map<string, Promise<unknown>>();
+  return <T>(id: string, work: () => Promise<T>): Promise<T> => {
+    const previous = tail.get(id) ?? Promise.resolve();
+    const run = previous.then(work, work);
+    tail.set(
+      id,
+      run.then(
+        () => undefined,
+        () => undefined,
+      ),
+    );
+    return run;
+  };
+}
+
 export function createApp(defaultStore?: PartyStore) {
   const app = new Hono<{ Bindings: WorkerEnv }>();
+  const lockPartyWrite = createPartyWriteLock();
 
   const resolveStore = (env: WorkerEnv | undefined) => defaultStore ?? storeFor(env);
 
@@ -72,21 +89,23 @@ export function createApp(defaultStore?: PartyStore) {
       workspace?: unknown;
       baseUpdatedAt?: number;
     };
-    const existing = await store.get(id);
-    if (!existing) return c.json({ error: "Party not found" }, 404);
-    if (
-      typeof body.baseUpdatedAt === "number" &&
-      existing.updatedAt > body.baseUpdatedAt
-    ) {
-      return c.json({ error: "stale", current: existing }, 409);
-    }
-    const record = {
-      ...existing,
-      workspace: sanitizeWorkspace(body.workspace) as Workspace,
-      updatedAt: Math.max(Date.now(), existing.updatedAt + 1),
-    };
-    await store.put(record);
-    return c.json(record);
+    return lockPartyWrite(id, async () => {
+      const existing = await store.get(id);
+      if (!existing) return c.json({ error: "Party not found" }, 404);
+      if (
+        typeof body.baseUpdatedAt === "number" &&
+        existing.updatedAt > body.baseUpdatedAt
+      ) {
+        return c.json({ error: "stale", current: existing }, 409);
+      }
+      const record = {
+        ...existing,
+        workspace: sanitizeWorkspace(body.workspace) as Workspace,
+        updatedAt: Math.max(Date.now(), existing.updatedAt + 1),
+      };
+      await store.put(record);
+      return c.json(record);
+    });
   });
 
   return app;

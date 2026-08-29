@@ -57,15 +57,18 @@ export async function saveParty(
       }),
     );
   } catch (error) {
-    if (
-      error instanceof PartyRequestError &&
-      error.status === 409 &&
-      error.current &&
-      attempt < 1
-    ) {
-      return saveParty(id, workspace, error.current.updatedAt, attempt + 1);
+    if (!(error instanceof PartyRequestError) || error.status !== 409 || attempt >= 1) {
+      throw error;
     }
-    throw error;
+    let latest = error.current;
+    if (!latest) {
+      try {
+        latest = await fetchParty(id);
+      } catch {
+        throw error;
+      }
+    }
+    return saveParty(id, workspace, latest.updatedAt, attempt + 1);
   }
 }
 

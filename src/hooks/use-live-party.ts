@@ -11,7 +11,7 @@ import {
   partyPath,
   saveParty,
 } from "@/lib/live/api";
-import { createPersistQueue, type SaveStatus } from "@/lib/live/persist";
+import { acquireLiveQueue, type SaveStatus } from "@/lib/live/persist";
 
 export type LiveStatus = "connecting" | "live" | "local";
 export type { SaveStatus };
@@ -23,7 +23,11 @@ export function useLiveParty() {
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const remote = useRef(false);
   const updatedAtRef = useRef(0);
+  const setUpdatedAtRef = useRef(setUpdatedAt);
+  const setSaveStatusRef = useRef(setSaveStatus);
   const hydrated = useStudioStore((state) => state.hydrated);
+  setUpdatedAtRef.current = setUpdatedAt;
+  setSaveStatusRef.current = setSaveStatus;
 
   useEffect(() => {
     let cancelled = false;
@@ -76,9 +80,14 @@ export function useLiveParty() {
   useEffect(() => {
     if (!partyId || !hydrated || status !== "live") return;
 
-    const queue = createPersistQueue({
-      save: (baseUpdatedAt) => saveParty(partyId, studioSnapshot(), baseUpdatedAt),
-      onStatus: setSaveStatus,
+    const queue = acquireLiveQueue(partyId, {
+      save: async (baseUpdatedAt) => {
+        const record = await saveParty(partyId, studioSnapshot(), baseUpdatedAt);
+        updatedAtRef.current = record.updatedAt;
+        setUpdatedAtRef.current(record.updatedAt);
+        return record;
+      },
+      onStatus: (next) => setSaveStatusRef.current(next),
       onError: (error) => {
         const stale = error instanceof PartyRequestError && error.status === 409;
         toast.error(
@@ -104,7 +113,7 @@ export function useLiveParty() {
           remote.current = true;
           useStudioStore.getState().hydrateWorkspace(record.workspace);
           updatedAtRef.current = record.updatedAt;
-          setUpdatedAt(record.updatedAt);
+          setUpdatedAtRef.current(record.updatedAt);
           remote.current = false;
         })
         .catch(() => undefined);
@@ -120,7 +129,6 @@ export function useLiveParty() {
       window.removeEventListener("pagehide", onHide);
       window.clearInterval(poll);
       void queue.flush();
-      queue.dispose();
     };
   }, [partyId, hydrated, status]);
 
