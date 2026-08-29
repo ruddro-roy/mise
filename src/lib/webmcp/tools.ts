@@ -303,7 +303,7 @@ export const CORE_TOOLS: ToolDefinition[] = [
       const name = String(input.name);
       const template =
         getDishByCatalogId(name) ?? findDishTemplates(name)[0];
-      if (!template) return result({ ok: false, error: `No catalog dish matching \"${name}\".` });
+      if (!template) return result({ ok: false, error: `No catalog dish matching "${name}".` });
       const servings = Number(
         input.servings ?? useStudioStore.getState().brief.guestCount ?? 6,
       );
@@ -329,7 +329,7 @@ export const CORE_TOOLS: ToolDefinition[] = [
       const dish = useStudioStore
         .getState()
         .dishes.find((item) => item.name.toLowerCase().includes(needle));
-      if (!dish) return result({ ok: false, error: `No dish matching \"${input.name}\".` });
+      if (!dish) return result({ ok: false, error: `No dish matching "${input.name}".` });
       useStudioStore.getState().removeDish(dish.id);
       log("remove_dish", `Took ${dish.name} off the menu.`);
       return result({ ok: true, removed: dish.name });
@@ -411,7 +411,7 @@ export const CORE_TOOLS: ToolDefinition[] = [
       const item = useStudioStore
         .getState()
         .market.find((row) => row.name.toLowerCase().includes(needle));
-      if (!item) return result({ ok: false, error: `No market line matching \"${input.name}\".` });
+      if (!item) return result({ ok: false, error: `No market line matching "${input.name}".` });
       useStudioStore.getState().toggleMarket(item.id, Boolean(input.checked ?? true));
       return result({ ok: true, name: item.name, checked: input.checked ?? true });
     },
