@@ -50,4 +50,19 @@ describe("planCalls", () => {
     });
     expect(calls.some((call) => call.name === "generate_shopping_list")).toBe(true);
   });
+
+  it("unlocks without also locking", () => {
+    expect(planCalls("unlock the menu").map((call) => call.name)).toEqual(["unlock_menu"]);
+  });
+
+  it("treats book it as lock_menu, not a state dump", () => {
+    expect(planCalls("book it").map((call) => call.name)).toEqual(["lock_menu"]);
+    expect(planCalls("lock it").map((call) => call.name)).toEqual(["lock_menu"]);
+    expect(planCalls("confirm the menu").map((call) => call.name)).toEqual(["lock_menu"]);
+  });
+
+  it("does not dump get_workspace_state for an unknown line", () => {
+    expect(planCalls("get_workspace_state").map((call) => call.name)).toEqual([]);
+    expect(planCalls("asdfzxcv").map((call) => call.name)).toEqual([]);
+  });
 });

@@ -18,7 +18,7 @@ function parseResult(raw: unknown): unknown {
 }
 
 function summarize(steps: AgentStep[]): string {
-  if (!steps.length) return "I looked at the table and had nothing to change.";
+  if (!steps.length) return "I can plan dinner, lock the menu, or send invites.";
   const lines: string[] = [];
   for (const step of steps) {
     if (step.error) {
@@ -32,7 +32,7 @@ function summarize(steps: AgentStep[]): string {
     }
     switch (step.name) {
       case "set_event_brief":
-        lines.push("I wrote the brief — date, budget, and the shape of the night.");
+        lines.push("I wrote the brief. Date, budget, and the shape of the night.");
         break;
       case "add_guest":
         lines.push(`Added ${(step.args.name as string) ?? "a guest"} to the list.`);
@@ -70,15 +70,29 @@ function summarize(steps: AgentStep[]): string {
             : "Invites stayed in the drawer.",
         );
         break;
-      case "get_workspace_state":
-        lines.push("Here is where the table stands — look at the studio for the live state.");
+      case "get_workspace_state": {
+        const snap = step.result as {
+          brief?: { title?: string };
+          guests?: unknown[];
+          dishes?: unknown[];
+          menuLocked?: boolean;
+        } | null;
+        const title = snap?.brief?.title || "Untitled dinner";
+        const guests = Array.isArray(snap?.guests) ? snap.guests.length : 0;
+        const dishes = Array.isArray(snap?.dishes) ? snap.dishes.length : 0;
+        lines.push(
+          snap?.menuLocked
+            ? `${title} is locked. ${guests} guests, ${dishes} dishes.`
+            : `${title} is open. ${guests} guests, ${dishes} dishes. Say book it to lock the menu.`,
+        );
         break;
+      }
       default:
         break;
     }
   }
   const unique = [...new Set(lines.filter(Boolean))];
-  return unique.join(" ") || "Done. Watch the studio — that is the source of truth.";
+  return unique.join(" ") || "Done. Watch the studio. That is the source of truth.";
 }
 
 export async function runHostAgent(

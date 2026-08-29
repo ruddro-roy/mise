@@ -202,11 +202,20 @@ export function planCalls(prompt: string): AgentCall[] {
     });
   }
 
-  if (mentions(lower, "lock")) {
-    calls.push({ name: "lock_menu", args: {} });
-  }
   if (mentions(lower, "unlock")) {
     calls.push({ name: "unlock_menu", args: {} });
+  } else if (
+    mentions(
+      lower,
+      "lock",
+      "book it",
+      "book this",
+      "book the table",
+      "confirm the menu",
+      "confirm it",
+    )
+  ) {
+    calls.push({ name: "lock_menu", args: {} });
   }
   if (mentions(lower, "invite", "send them")) {
     calls.push({ name: "send_invites", args: {} });
@@ -219,10 +228,6 @@ export function planCalls(prompt: string): AgentCall[] {
   const panelMatch = /\b(brief|guests|menu|seating|market|run)\b/.exec(lower);
   if (mentions(lower, "show me", "open the", "look at") && panelMatch) {
     calls.push({ name: "focus_panel", args: { panel: panelMatch[1] as Panel } });
-  }
-
-  if (!calls.length) {
-    calls.push({ name: "get_workspace_state", args: {} });
   }
 
   const seen = new Set<string>();
