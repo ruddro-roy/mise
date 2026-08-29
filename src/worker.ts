@@ -83,7 +83,7 @@ export function createApp(defaultStore?: PartyStore) {
     const record = {
       ...existing,
       workspace: sanitizeWorkspace(body.workspace) as Workspace,
-      updatedAt: Date.now(),
+      updatedAt: Math.max(Date.now(), existing.updatedAt + 1),
     };
     await store.put(record);
     return c.json(record);
