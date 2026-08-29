@@ -112,4 +112,81 @@ describe("live party API", () => {
     const record = (await read.json()) as { workspace: { brief: { title: string } } };
     expect(record.workspace.brief.title).toBe("Edit 5");
   });
+
+  it("409s only when the token is actually behind, not on a matching write", async () => {
+    const app = createApp(createMemoryPartyStore());
+    const created = await app.request("/api/parties", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ workspace: emptyWorkspace() }),
+    });
+    const party = (await created.json()) as { id: string; updatedAt: number };
+
+    const matching = emptyWorkspace();
+    matching.brief.title = "Same token";
+    const ok = await app.request(`/api/parties/${party.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ workspace: matching, baseUpdatedAt: party.updatedAt }),
+    });
+    expect(ok.status).toBe(200);
+
+    const missing = emptyWorkspace();
+    missing.brief.title = "No token";
+    const alsoOk = await app.request(`/api/parties/${party.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ workspace: missing }),
+    });
+    expect(alsoOk.status).toBe(200);
+  });
+
+  it("two rapid PUTs with the same base: first 200, second 409; sequential tokens both 200", async () => {
+    const app = createApp(createMemoryPartyStore());
+    const created = await app.request("/api/parties", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ workspace: emptyWorkspace() }),
+    });
+    const party = (await created.json()) as { id: string; updatedAt: number };
+
+    const firstBody = emptyWorkspace();
+    firstBody.brief.title = "First";
+    const secondBody = emptyWorkspace();
+    secondBody.brief.title = "Second";
+    const [first, second] = await Promise.all([
+      app.request(`/api/parties/${party.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ workspace: firstBody, baseUpdatedAt: party.updatedAt }),
+      }),
+      app.request(`/api/parties/${party.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ workspace: secondBody, baseUpdatedAt: party.updatedAt }),
+      }),
+    ]);
+    const overlap = [first.status, second.status].sort((a, b) => a - b);
+    expect(overlap).toEqual([200, 409]);
+
+    const winner = first.status === 200 ? first : second;
+    const saved = (await winner.json()) as { updatedAt: number };
+    const thirdBody = emptyWorkspace();
+    thirdBody.brief.title = "Third";
+    const third = await app.request(`/api/parties/${party.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ workspace: thirdBody, baseUpdatedAt: saved.updatedAt }),
+    });
+    expect(third.status).toBe(200);
+    const again = (await third.json()) as { updatedAt: number };
+    const fourthBody = emptyWorkspace();
+    fourthBody.brief.title = "Fourth";
+    const fourth = await app.request(`/api/parties/${party.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ workspace: fourthBody, baseUpdatedAt: again.updatedAt }),
+    });
+    expect(fourth.status).toBe(200);
+  });
 });
