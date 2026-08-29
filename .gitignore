@@ -46,3 +46,6 @@ next-env.d.ts
 
 # local agent scratch
 /agent-tools
+
+# Cursor agent files stay local. They are not part of the hackathon repo.
+.cursor/
