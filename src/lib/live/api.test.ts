@@ -49,4 +49,52 @@ describe("saveParty", () => {
     expect(second.baseUpdatedAt).toBe(200);
     expect(second.workspace.brief.title).toBe("Saturday dinner");
   });
+
+  it("GETs the latest record when a 409 has no current, then retries once", async () => {
+    const workspace = emptyWorkspace();
+    workspace.brief.title = "Host title";
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ error: "stale" }), {
+          status: 409,
+          headers: { "Content-Type": "application/json" },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            id: "abc123abcd",
+            workspace: emptyWorkspace(),
+            updatedAt: 200,
+            createdAt: 100,
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            id: "abc123abcd",
+            workspace,
+            updatedAt: 300,
+            createdAt: 100,
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const record = await saveParty("abc123abcd", workspace, 100);
+    expect(record.updatedAt).toBe(300);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock.mock.calls[1]?.[0]).toBe("/api/parties/abc123abcd");
+    expect(fetchMock.mock.calls[1]?.[1]?.method ?? "GET").toBe("GET");
+    const retry = JSON.parse(String(fetchMock.mock.calls[2]?.[1]?.body)) as {
+      baseUpdatedAt: number;
+      workspace: { brief: { title: string } };
+    };
+    expect(retry.baseUpdatedAt).toBe(200);
+    expect(retry.workspace.brief.title).toBe("Host title");
+  });
 });
