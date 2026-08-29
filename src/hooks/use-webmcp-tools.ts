@@ -15,6 +15,7 @@ export function useWebMcpTools() {
   useEffect(() => {
     const model = ensureModelContext();
     const usingNative = isNativeModelContext();
+    // Browser-only API: install after mount, then subscribe to toolchange.
     queueMicrotask(() => {
       setCtx(model);
       setNative(usingNative);
