@@ -147,6 +147,49 @@ export async function runHostAgent(
   return { reply: summarize(steps), steps };
 }
 
+export const NO_CONTEXT_REPLY =
+  "The sous-chef tools are not on this page yet. Refresh, or use the studio panels yourself.";
+
+export const BUSY_REPLY = "Still working the last request. Send that again in a moment.";
+
+export type DeskTurn = {
+  userText: string;
+  reply: string;
+  steps: AgentStep[];
+};
+
+export async function runDeskTurn(
+  text: string,
+  ctx: ModelContext | null,
+  options: { busy?: boolean; onStep?: (step: AgentStep) => void } = {},
+): Promise<DeskTurn | null> {
+  const userText = text.trim();
+  if (!userText) return null;
+  if (options.busy) {
+    return { userText, reply: BUSY_REPLY, steps: [] };
+  }
+  if (!ctx) {
+    return { userText, reply: NO_CONTEXT_REPLY, steps: [] };
+  }
+  try {
+    const result = await runHostAgent(userText, ctx, options.onStep);
+    return {
+      userText,
+      reply: result.reply.trim() || "Done. Watch the studio. That is the source of truth.",
+      steps: result.steps,
+    };
+  } catch (error) {
+    return {
+      userText,
+      reply:
+        error instanceof Error && error.message.trim()
+          ? error.message
+          : "The sous-chef stalled.",
+      steps: [],
+    };
+  }
+}
+
 export const SUGGESTED_PROMPTS = [
   "Plan Saturday dinner for 8 — two vegan, Maya has a nut allergy, $90, Italian, warm and unfussy",
   "Seat Maya away from Tom and put the two vegans together",
