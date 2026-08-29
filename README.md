@@ -22,6 +22,18 @@ Use GPT-5.6 Sol or Terra in ChatGPT's browser. Luna has WebMCP off. Open **Site 
 
 When the production URL is live, open it in ChatGPT's in-app browser so you and the agent share one table.
 
+## For judges
+
+Mise is **WebMCP**, not a ChatGPT MCP plugin or a separate MCP server. You do not install anything. The published Site page registers tools on `document.modelContext`. ChatGPT discovers them through **Site tools** in the address bar when the URL is open in ChatGPT's in-app browser.
+
+1. Open the production Sites URL inside ChatGPT (GPT-5.6 Sol or Terra; Luna has WebMCP off).
+2. Confirm the header badge says **Native WebMCP**, not polyfill.
+3. Open **Site tools** and check for core tools such as `lock_menu`, `add_guest`, and `get_workspace_state` (about 25 total).
+4. Ask ChatGPT to plan a Saturday dinner and lock the menu. `lock_menu` should open a confirmation dialog in the page before the menu locks.
+5. Refresh. The party id in `/p/{id}` and the saved state should still be there (D1 on Sites).
+
+The **Sous-chef** panel is an in-page demo. It uses the same tools but runs through the polyfill in a normal browser. Hackathon scoring follows native WebMCP in ChatGPT's browser, not the Sous-chef badge alone.
+
 ## Why this is a WebMCP problem
 
 Hosting is unpaid production work. The hard part starts when two people are vegan, one cannot sit next to another, the budget is $90, and dinner is Saturday.

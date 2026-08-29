@@ -32,3 +32,5 @@ Sites fills in `project_id` after it provisions the project. Leave secrets out o
 Register tools on the top-level page through `document.modelContext`. ChatGPT does not discover tools in iframes.
 
 `lock_menu` and `send_invites` wait for a person to confirm in the UI. Tool results are JSON strings.
+
+Judges score native WebMCP in ChatGPT's in-app browser (Site tools, Native WebMCP badge), not a separate MCP server. See README "For judges".
