@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "mise",
+  "compatibility_date": "2026-08-01",
+  "main": "./src/worker.ts",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "mise",
+      "database_id": "local-dev-mise",
+      "migrations_dir": "drizzle"
+    }
+  ]
+}
