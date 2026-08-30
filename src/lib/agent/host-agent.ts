@@ -238,7 +238,7 @@ export async function runDeskTurn(
 }
 
 export const SUGGESTED_PROMPTS = [
-  "Plan Saturday dinner for 8 — two vegan, Maya has a nut allergy, $90, Italian, warm and unfussy",
+  "Plan Saturday dinner for 8, two vegan, Maya has a nut allergy, $90, Italian, warm and unfussy",
   "Seat Maya away from Tom and put the two vegans together",
   "Swap the pasta for something gluten-free and rebuild the market list",
   "Build a 4-hour run of show starting at 7pm, then lock the menu",

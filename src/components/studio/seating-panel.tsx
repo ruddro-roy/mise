@@ -112,7 +112,7 @@ export function SeatingPanel() {
         <EmptyState
           kicker="No politics yet"
           title="Seating needs people."
-          body="Add guests first, or load the sample Saturday — Maya asked not to sit with Tom."
+          body="Add guests first, or load the sample Saturday. Maya asked not to sit with Tom."
           actionLabel="Load the sample Saturday"
           onAction={loadSample}
         />

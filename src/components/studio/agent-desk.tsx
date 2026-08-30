@@ -36,7 +36,7 @@ export function AgentDesk({ ctx, native, tools }: AgentDeskProps) {
     {
       id: "hello",
       role: "agent",
-      text: "I am the sous-chef on this page. I only act through WebMCP tools — the same ones ChatGPT and Chrome see. Give me a night, a budget, and the people who cannot sit together.",
+      text: "I am the sous-chef on this page. I only act through WebMCP tools, the same ones ChatGPT and Chrome see. Give me a night, a budget, and the people who cannot sit together.",
     },
   ]);
   const endRef = useRef<HTMLDivElement>(null);
@@ -135,7 +135,7 @@ export function AgentDesk({ ctx, native, tools }: AgentDeskProps) {
                   {message.steps.map((step, index) => (
                     <li key={`${step.name}-${index}`}>
                       {step.name}
-                      {step.error ? ` — ${step.error}` : ""}
+                      {step.error ? `: ${step.error}` : ""}
                     </li>
                   ))}
                 </ol>

@@ -47,7 +47,7 @@ export function BriefPanel() {
         <h2 className="font-display mt-2 text-4xl leading-none">Name the night.</h2>
         <p className="mt-3 text-sm leading-6 text-muted-foreground">
           Constraints live here. Taste lives in the menu. Your agent can fill this from a
-          sentence — you still decide what the night is for.
+          sentence. You still decide what the night is for.
         </p>
       </header>
 
@@ -115,7 +115,7 @@ export function BriefPanel() {
         <h3 className="font-display text-xl text-foreground">How WebMCP sits at this table</h3>
         <p className="mt-2">
           Every action the sous-chef takes is a{" "}
-          <code className="font-mono text-xs">document.modelContext</code> tool — the
+          <code className="font-mono text-xs">document.modelContext</code> tool, the
           same contract ChatGPT&apos;s in-app browser and Chrome with WebMCP enabled
           discover. Tools that change the menu wait if it is locked. Tools that send
           invites wait for you. View-specific read tools appear and disappear with the

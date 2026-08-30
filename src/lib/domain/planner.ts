@@ -563,7 +563,7 @@ export function draftInvites(input: {
     "On the table:",
     menu,
     "",
-    "Reply with anything I should keep off the plates — allergies, no-shows, plus-ones.",
+    "Reply with anything I should keep off the plates: allergies, no-shows, plus-ones.",
     input.guests.length ? `List so far: ${input.guests.map((guest) => guest.name).join(", ")}.` : "",
   ]
     .filter((line) => line !== "")
