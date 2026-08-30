@@ -30,7 +30,7 @@ The share-link model: every party is a row in D1 keyed by the id in `/p/{id}`. O
 
 1. Open [mise-studio.ruddro-roy.chatgpt.site](https://mise-studio.ruddro-roy.chatgpt.site) inside ChatGPT (GPT-5.6 Sol or Terra; Luna has WebMCP off).
 2. Confirm the header badge says **Native WebMCP**, not polyfill.
-3. Open **Site tools** and check for core tools such as `lock_menu`, `add_guest`, and `get_workspace_state` (28 total).
+3. Open **Site tools** and check for core tools such as `lock_menu`, `add_guest`, and `get_workspace_state` (25 core tools; 3 more lens tools register while their panel is open).
 4. Ask ChatGPT to plan a Saturday dinner and lock the menu. `lock_menu` should open a confirmation dialog in the page before the menu locks.
 5. Refresh. The party id in `/p/{id}` and the saved state should still be there (D1 on Sites).
 

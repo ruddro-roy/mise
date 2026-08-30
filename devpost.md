@@ -9,7 +9,7 @@ Repo: https://github.com/ruddro-roy/mise (MIT licensed)
 
 ## How WebMCP is used
 
-The page registers 28 tools on `document.modelContext`. Source: https://github.com/ruddro-roy/mise/blob/main/src/lib/webmcp/tools.ts
+The page registers 25 core tools on `document.modelContext`, plus 3 read-only lens tools that register while their panel is open. Source: https://github.com/ruddro-roy/mise/blob/main/src/lib/webmcp/tools.ts
 
 The tools are the app, not decoration. `set_event_brief`, `add_guest`, `propose_menu`, `substitute_dish`, `auto_seat`, `generate_shopping_list`, and `generate_run_of_show` write the state the studio renders. Read tools like `get_workspace_state` and the per-panel lens tools give the agent the same view the human has. Destructive tools, `lock_menu` and `send_invites`, open a confirmation dialog in the page. The agent can ask, only the host can finish.
 
