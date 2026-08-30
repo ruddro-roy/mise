@@ -75,6 +75,13 @@ export function StudioHeader({
         <Button variant="outline" size="sm" onClick={loadSample}>
           Sample Saturday
         </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => window.location.assign("/")}
+        >
+          New party
+        </Button>
         <Button variant="outline" size="sm" disabled={!live.partyId} onClick={() => void copyLink()}>
           Copy live link
         </Button>

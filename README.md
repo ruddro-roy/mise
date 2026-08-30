@@ -8,7 +8,7 @@ Each visit opens a live party at `/p/{id}` on the Sites D1 database. The host, a
 
 ## Host on ChatGPT Sites
 
-Production URL will go here after Sites deploy.
+Production URL: [mise-studio.ruddro-roy.chatgpt.site](https://mise-studio.ruddro-roy.chatgpt.site)
 
 Required files already in this repo:
 
@@ -26,7 +26,9 @@ When the production URL is live, open it in ChatGPT's in-app browser so you and 
 
 Mise is **WebMCP**, not a ChatGPT MCP plugin or a separate MCP server. You do not install anything. The published Site page registers tools on `document.modelContext`. ChatGPT discovers them through **Site tools** in the address bar when the URL is open in ChatGPT's in-app browser.
 
-1. Open the production Sites URL inside ChatGPT (GPT-5.6 Sol or Terra; Luna has WebMCP off).
+The share-link model: every party is a row in D1 keyed by the id in `/p/{id}`. Opening the site root creates a fresh party and puts its id in the URL. Anyone with the link, including ChatGPT, edits the same record. There are no accounts and no sessions. Writes carry the last `updatedAt` the client saw; a stale write gets a 409 and retries once against the latest record. The **New party** button in the header opens a clean table when you want one.
+
+1. Open [mise-studio.ruddro-roy.chatgpt.site](https://mise-studio.ruddro-roy.chatgpt.site) inside ChatGPT (GPT-5.6 Sol or Terra; Luna has WebMCP off).
 2. Confirm the header badge says **Native WebMCP**, not polyfill.
 3. Open **Site tools** and check for core tools such as `lock_menu`, `add_guest`, and `get_workspace_state` (about 25 total).
 4. Ask ChatGPT to plan a Saturday dinner and lock the menu. `lock_menu` should open a confirmation dialog in the page before the menu locks.
