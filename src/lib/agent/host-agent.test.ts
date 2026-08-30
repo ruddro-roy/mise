@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { BUSY_REPLY, NO_CONTEXT_REPLY, runDeskTurn, runHostAgent } from "./host-agent";
+import {
+  BUSY_REPLY,
+  catalogFallback,
+  NO_CONTEXT_REPLY,
+  runDeskTurn,
+  runHostAgent,
+} from "./host-agent";
+import { DISH_CATALOG } from "@/lib/domain/catalog";
 import { useStudioStore } from "@/lib/domain/store";
 import { createModelContextPolyfill } from "@/lib/webmcp/polyfill";
 import { CORE_TOOLS } from "@/lib/webmcp/tools";
@@ -50,6 +57,34 @@ describe("runHostAgent", () => {
   it("answers any unrecognized line instead of going silent", async () => {
     const { reply } = await runHostAgent("asdfzxcv", ctx({}));
     expect(reply.trim().length).toBeGreaterThan(0);
+  });
+
+  it.each([
+    "Can we do sushi?",
+    "I want paella as the centerpiece",
+    "What about a big pot of curry?",
+  ])("grounds the off-catalog ask %s in real catalog dishes", async (prompt) => {
+    const { reply, steps } = await runHostAgent(prompt, ctx({}));
+    expect(steps).toEqual([]);
+    expect(reply).toContain("not in the catalog");
+    const suggested = DISH_CATALOG.filter((dish) => reply.includes(dish.name));
+    expect(suggested.length).toBeGreaterThanOrEqual(3);
+  });
+});
+
+describe("catalogFallback", () => {
+  it("returns null for prompts that are not about food", () => {
+    expect(catalogFallback("what is the plan")).toBeNull();
+    expect(catalogFallback("asdfzxcv")).toBeNull();
+  });
+
+  it("only names dishes that exist in the catalog", () => {
+    const reply = catalogFallback("ramen night with tacos");
+    expect(reply).not.toBeNull();
+    const names = DISH_CATALOG.map((dish) => dish.name);
+    for (const chunk of reply!.split(": ")[1].split(". ")[0].split(", ")) {
+      expect(names).toContain(chunk);
+    }
   });
 });
 

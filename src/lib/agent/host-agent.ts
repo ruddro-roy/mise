@@ -1,4 +1,6 @@
 import { planCalls } from "./intents";
+import { findDishTemplates } from "@/lib/domain/catalog";
+import type { DishTemplate } from "@/lib/domain/types";
 import type { ModelContext } from "@/lib/webmcp/types";
 
 export type AgentStep = {
@@ -17,8 +19,53 @@ function parseResult(raw: unknown): unknown {
   }
 }
 
-function summarize(steps: AgentStep[]): string {
-  if (!steps.length) return "I can plan dinner, lock the menu, or send invites.";
+// Off-catalog food words mapped to the closest cuisine the catalog covers.
+const CUISINE_ALIASES: Record<string, string> = {
+  sushi: "japanese",
+  ramen: "japanese",
+  udon: "japanese",
+  curry: "indian",
+  naan: "indian",
+  biryani: "indian",
+  pizza: "italian",
+  lasagna: "italian",
+  risotto: "italian",
+  burrito: "mexican",
+  taco: "mexican",
+  tacos: "mexican",
+  enchiladas: "mexican",
+  paella: "mediterranean",
+  falafel: "mediterranean",
+  gyro: "mediterranean",
+  shawarma: "mediterranean",
+};
+
+export function catalogFallback(prompt: string): string | null {
+  const words = prompt.toLowerCase().match(/[a-z][a-z-]{3,}/g) ?? [];
+  const matched = new Map<string, DishTemplate>();
+  let foodAsk = false;
+  for (const word of words) {
+    const alias = CUISINE_ALIASES[word];
+    if (alias) foodAsk = true;
+    for (const dish of findDishTemplates(alias ?? word)) {
+      foodAsk = true;
+      matched.set(dish.catalogId, dish);
+    }
+  }
+  if (!foodAsk) return null;
+  const names = [...matched.values()].slice(0, 3).map((dish) => dish.name);
+  if (!names.length) return null;
+  return `That dish is not in the catalog, so I will not invent it. Closest real dishes on hand: ${names.join(
+    ", ",
+  )}. Ask me to propose a menu or swap a dish and I will use them.`;
+}
+
+function summarize(steps: AgentStep[], prompt = ""): string {
+  if (!steps.length) {
+    return (
+      catalogFallback(prompt) ?? "I can plan dinner, lock the menu, or send invites."
+    );
+  }
   const lines: string[] = [];
   for (const step of steps) {
     if (step.error) {
@@ -144,7 +191,7 @@ export async function runHostAgent(
     }
   }
 
-  return { reply: summarize(steps), steps };
+  return { reply: summarize(steps, prompt), steps };
 }
 
 export const NO_CONTEXT_REPLY =
