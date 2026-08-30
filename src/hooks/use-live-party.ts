@@ -11,7 +11,7 @@ import {
   partyPath,
   saveParty,
 } from "@/lib/live/api";
-import { acquireLiveQueue, type SaveStatus } from "@/lib/live/persist";
+import { acquireLiveQueue, isPersistableStudioChange, type SaveStatus } from "@/lib/live/persist";
 
 export type LiveStatus = "connecting" | "live" | "local";
 export type { SaveStatus };
@@ -101,8 +101,7 @@ export function useLiveParty() {
 
     const unsub = useStudioStore.subscribe((state, previous) => {
       if (remote.current) return;
-      if (state.pendingApproval || previous.pendingApproval) return;
-      if (state === previous) return;
+      if (!isPersistableStudioChange(state, previous)) return;
       queue.markDirty();
     });
 

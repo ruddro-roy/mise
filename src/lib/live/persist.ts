@@ -1,5 +1,15 @@
 export type SaveStatus = "idle" | "saving" | "saved" | "error";
 
+export function isPersistableStudioChange(
+  state: { menuLocked: boolean; invitesSent: boolean; pendingApproval: unknown },
+  previous: { menuLocked: boolean; invitesSent: boolean; pendingApproval: unknown },
+): boolean {
+  if (state.menuLocked !== previous.menuLocked) return true;
+  if (state.invitesSent !== previous.invitesSent) return true;
+  if (state.pendingApproval || previous.pendingApproval) return false;
+  return state !== previous;
+}
+
 export type PersistHandlers = {
   save: (baseUpdatedAt: number) => Promise<{ updatedAt: number }>;
   onStatus?: (status: SaveStatus) => void;

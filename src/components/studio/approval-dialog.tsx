@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,13 +14,24 @@ import { useStudioStore } from "@/lib/domain/store";
 
 export function ApprovalDialog() {
   const pending = useStudioStore((state) => state.pendingApproval);
-  const resolve = useStudioStore((state) => state.resolveApproval);
+  const resolveApproval = useStudioStore((state) => state.resolveApproval);
+  const settledId = useRef<string | null>(null);
+  if (pending && settledId.current !== pending.id) {
+    settledId.current = null;
+  }
+
+  const settle = (ok: boolean) => {
+    const current = useStudioStore.getState().pendingApproval;
+    if (!current || settledId.current === current.id) return;
+    settledId.current = current.id;
+    resolveApproval(ok);
+  };
 
   return (
     <Dialog
       open={Boolean(pending)}
       onOpenChange={(open) => {
-        if (!open && pending) resolve(false);
+        if (!open) settle(false);
       }}
     >
       <DialogContent className="sm:max-w-lg" showCloseButton>
@@ -30,10 +42,10 @@ export function ApprovalDialog() {
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" onClick={() => resolve(false)}>
+          <Button variant="outline" onClick={() => settle(false)}>
             Not yet
           </Button>
-          <Button onClick={() => resolve(true)}>{pending?.confirmLabel ?? "Confirm"}</Button>
+          <Button onClick={() => settle(true)}>{pending?.confirmLabel ?? "Confirm"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

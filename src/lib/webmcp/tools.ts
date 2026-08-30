@@ -616,17 +616,21 @@ export const CORE_TOOLS: ToolDefinition[] = [
       "Ask the host to lock the menu. The tool waits for an on-page confirmation. After lock, dishes cannot change until unlock_menu.",
     inputSchema: emptySchema,
     async execute() {
-      const state = useStudioStore.getState();
-      if (state.menuLocked) return result({ ok: true, alreadyLocked: true });
-      const names = state.dishes.map((dish) => dish.name).join(", ") || "an empty menu";
-      const approved = await state.requestApproval({
+      if (useStudioStore.getState().menuLocked) {
+        return result({ ok: true, alreadyLocked: true, locked: true });
+      }
+      const names =
+        useStudioStore.getState().dishes.map((dish) => dish.name).join(", ") || "an empty menu";
+      const approved = await useStudioStore.getState().requestApproval({
         tool: "lock_menu",
         title: "Lock this menu?",
         body: `The agent wants to freeze ${names}. You can still shop and seat. Unlock later if the pasta rebellion wins.`,
         confirmLabel: "Lock the menu",
       });
       if (!approved) return result({ ok: false, error: "The host declined to lock the menu." });
-      state.setMenuLocked(true);
+      const store = useStudioStore.getState();
+      store.setMenuLocked(true);
+      store.setPanel("menu");
       log("lock_menu", "Menu locked by the host.");
       return result({ ok: true, locked: true });
     },
