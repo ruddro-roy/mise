@@ -1,4 +1,4 @@
-import { Hono } from "hono";
+import { Hono, type Context } from "hono";
 import { emptyWorkspace } from "./lib/domain/sample";
 import { createD1PartyStore } from "./lib/live/store-d1";
 import { localMemoryStore } from "./lib/live/store-memory";
@@ -51,12 +51,16 @@ export function createApp(defaultStore?: PartyStore) {
 
   const resolveStore = (env: WorkerEnv | undefined) => defaultStore ?? storeFor(env);
 
-  app.all("/mcp", (c) =>
+  const serveMcp = (c: Context<{ Bindings: WorkerEnv }>) =>
     handleMcpRequest(
       c.req.raw,
       createPartyService(resolveStore(c.env), newPartyId, lockPartyWrite),
-    ),
-  );
+    );
+
+  // `/api/mcp` is the public Sites endpoint. Keep `/mcp` for direct Worker
+  // deployments and local MCP clients.
+  app.all("/api/mcp", serveMcp);
+  app.all("/mcp", serveMcp);
 
   app.get("/api/health", (c) => {
     const who = identity(c);

@@ -15,7 +15,7 @@ The tools are the app, not decoration. `set_event_brief`, `add_guest`, `propose_
 
 In ChatGPT's in-app browser the tools appear under Site tools in the address bar, native WebMCP, nothing installed. In other browsers a polyfill implements the same contract so the in-page Sous-chef demo works everywhere. Concurrent writes are handled: a save that lost a race gets a 409 and retries once against the latest record.
 
-Mise also publishes an optional remote MCP server at https://mise-studio.ruddro-roy.chatgpt.site/mcp. This is a separate protocol surface, not a substitute for the WebMCP entry. It lets judges add Mise to ChatGPT Developer mode and use 13 focused tools against the exact same D1 party. The hybrid design makes the distinction visible: WebMCP owns the live, human-gated page experience; remote MCP makes the shared workspace installable.
+Mise also publishes an optional remote MCP server at https://mise-studio.ruddro-roy.chatgpt.site/api/mcp. This is a separate protocol surface, not a substitute for the WebMCP entry. It lets judges add Mise to ChatGPT Developer mode and use 13 focused tools against the exact same D1 party. The hybrid design makes the distinction visible: WebMCP owns the live, human-gated page experience; remote MCP makes the shared workspace installable.
 
 ## How to judge it
 
@@ -25,7 +25,7 @@ Mise also publishes an optional remote MCP server at https://mise-studio.ruddro-
 4. Say "book it". The page opens a confirmation dialog. Confirm it and the menu locks.
 5. Refresh. The `/p/{id}` party and its state persist.
 
-Optional installability check: add `https://mise-studio.ruddro-roy.chatgpt.site/mcp` as a remote MCP server in ChatGPT Developer mode, run `create_party`, and open the returned share URL. No environment variable or authentication is required.
+Optional installability check: add `https://mise-studio.ruddro-roy.chatgpt.site/api/mcp` as a remote MCP server in ChatGPT Developer mode, run `create_party`, and open the returned share URL. No environment variable or authentication is required.
 
 The README judge path covers the same steps: https://github.com/ruddro-roy/mise/blob/main/README.md#for-judges
 

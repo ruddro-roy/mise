@@ -10,6 +10,8 @@ type RpcResponse = {
   error?: { code: number; message: string };
 };
 
+const PUBLIC_MCP_PATH = "/api/mcp";
+
 function rpc(method: string, params?: Record<string, unknown>) {
   return {
     jsonrpc: "2.0",
@@ -24,7 +26,7 @@ async function callMcp(
   method: string,
   params?: Record<string, unknown>,
 ): Promise<RpcResponse> {
-  const response = await app.request("http://localhost/mcp", {
+  const response = await app.request(`http://localhost${PUBLIC_MCP_PATH}`, {
     method: "POST",
     headers: {
       Accept: "application/json, text/event-stream",
@@ -137,10 +139,24 @@ describe("remote MCP server", () => {
       serverInfo: { name: "mise-party-studio", version: "1.0.0" },
     });
 
-    const preflight = await app.request("http://localhost/mcp", {
+    const preflight = await app.request(`http://localhost${PUBLIC_MCP_PATH}`, {
       method: "OPTIONS",
     });
     expect(preflight.status).toBe(204);
     expect(preflight.headers.get("access-control-allow-origin")).toBe("*");
+  });
+
+  it("keeps the direct Worker /mcp endpoint available", async () => {
+    const app = createApp(createMemoryPartyStore());
+    const response = await app.request("http://localhost/mcp", {
+      method: "POST",
+      headers: {
+        Accept: "application/json, text/event-stream",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(rpc("tools/list", {})),
+    });
+
+    expect(response.status).toBe(200);
   });
 });

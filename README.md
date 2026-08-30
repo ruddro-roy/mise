@@ -29,7 +29,7 @@ When the production URL is live, open it in ChatGPT's in-app browser so you and 
 Mise has two deliberate agent surfaces over the same live party:
 
 - **Native WebMCP**, the challenge path. The published page registers 25 always-on tools plus 3 contextual read lenses. ChatGPT discovers them through **Site tools** when the URL is open in ChatGPT's in-app browser. Nothing needs to be installed.
-- **Remote MCP**, the optional installable path. A standards-compliant Streamable HTTP server is published at `https://mise-studio.ruddro-roy.chatgpt.site/mcp`. It exposes 13 focused tools and writes the same D1 party records.
+- **Remote MCP**, the optional installable path. A standards-compliant Streamable HTTP server is published at `https://mise-studio.ruddro-roy.chatgpt.site/api/mcp`. It exposes 13 focused tools and writes the same D1 party records.
 
 WebMCP and remote MCP are different protocols. Mise supports both; the WebMCP implementation is the hackathon entry.
 
@@ -45,7 +45,7 @@ The share-link model: every party is a row in D1 keyed by the id in `/p/{id}`. O
 
 1. Enable **Developer mode** in ChatGPT under **Settings → Security and login**.
 2. Open **Plugins**, select **+**, and create a plugin from a remote MCP server.
-3. Enter `https://mise-studio.ruddro-roy.chatgpt.site/mcp` as the MCP server URL. No authentication or environment variable is required.
+3. Enter `https://mise-studio.ruddro-roy.chatgpt.site/api/mcp` as the MCP server URL. No authentication or environment variable is required.
 4. Review the 13 tools, then create a party with `create_party` or give ChatGPT an existing `/p/{id}` share link.
 5. Open the returned share URL. Changes made through the plugin appear in the same studio.
 
@@ -69,7 +69,7 @@ Tools register on the top-level page. ChatGPT does not discover iframe tools.
 
 Core write tools stay registered so an agent that never clicks a panel can still act. Read-only lens tools come and go with the open panel. Tool results are JSON strings.
 
-The live party API at `/api/parties` stores the current party. The native agent goes through WebMCP and the optional plugin goes through `/mcp`; both persist the same workspace.
+The live party API at `/api/parties` stores the current party. The native agent goes through WebMCP and the optional plugin goes through `/api/mcp`; both persist the same workspace. Direct Worker deployments also keep `/mcp` as an alias.
 
 ## How remote MCP is implemented
 
@@ -91,7 +91,7 @@ npm test
 npm run build
 ```
 
-Local preview uses an in-memory party store. ChatGPT Sites uses D1. The local MCP endpoint is `http://127.0.0.1:43417/mcp`.
+Local preview uses an in-memory party store. ChatGPT Sites uses D1. The local MCP endpoint is `http://127.0.0.1:43417/api/mcp`.
 
 ## Suggested prompts (in ChatGPT, on the live URL)
 

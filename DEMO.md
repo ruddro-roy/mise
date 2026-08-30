@@ -2,7 +2,7 @@
 
 Target: one take, under 3 minutes, recorded against the live site in ChatGPT's in-app browser. Every line below is either something you say or something you do. No improvisation.
 
-Setup before recording: ChatGPT on GPT-5.6 Sol or Terra (Luna has WebMCP off). Close other tabs. Have https://mise-studio.ruddro-roy.chatgpt.site ready to paste. The optional remote MCP plugin can be preinstalled from `https://mise-studio.ruddro-roy.chatgpt.site/mcp`, but keep the main recording focused on native WebMCP because that is the challenge path.
+Setup before recording: ChatGPT on GPT-5.6 Sol or Terra (Luna has WebMCP off). Close other tabs. Have https://mise-studio.ruddro-roy.chatgpt.site ready to paste. The optional remote MCP plugin can be preinstalled from `https://mise-studio.ruddro-roy.chatgpt.site/api/mcp`, but keep the main recording focused on native WebMCP because that is the challenge path.
 
 ## Beats
 
