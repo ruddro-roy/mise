@@ -46,12 +46,12 @@ export type ModelContext = {
     argsJson: string,
     options?: { signal?: AbortSignal },
   ) => Promise<unknown>;
-  addEventListener: (
+  addEventListener?: (
     type: "toolchange",
     listener: EventListenerOrEventListenerObject,
     options?: boolean | AddEventListenerOptions,
   ) => void;
-  removeEventListener: (
+  removeEventListener?: (
     type: "toolchange",
     listener: EventListenerOrEventListenerObject,
     options?: boolean | EventListenerOptions,

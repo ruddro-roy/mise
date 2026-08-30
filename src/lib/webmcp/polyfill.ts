@@ -113,6 +113,20 @@ export function isNativeModelContext(): boolean {
   return !(POLYFILL_FLAG in ctx);
 }
 
+export function subscribeToToolChanges(
+  ctx: ModelContext,
+  listener: EventListenerOrEventListenerObject,
+): () => void {
+  const add = ctx.addEventListener;
+  const remove = ctx.removeEventListener;
+  if (typeof add !== "function" || typeof remove !== "function") {
+    return () => undefined;
+  }
+
+  add.call(ctx, "toolchange", listener);
+  return () => remove.call(ctx, "toolchange", listener);
+}
+
 export function ensureModelContext(): ModelContext | null {
   if (typeof document === "undefined") return null;
   const existing = getModelContext();

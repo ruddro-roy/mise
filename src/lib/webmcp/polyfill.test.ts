@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { createModelContextPolyfill } from "./polyfill";
+import { createModelContextPolyfill, subscribeToToolChanges } from "./polyfill";
+import type { ModelContext } from "./types";
 
 describe("WebMCP polyfill", () => {
   it("registers, lists, executes, and unregisters with AbortSignal", async () => {
     const ctx = createModelContextPolyfill();
     const controller = new AbortController();
     let changes = 0;
-    ctx.addEventListener("toolchange", () => {
+    ctx.addEventListener?.("toolchange", () => {
       changes += 1;
     });
 
@@ -44,5 +45,15 @@ describe("WebMCP polyfill", () => {
         execute: () => "no",
       }),
     ).rejects.toThrow(/letters/);
+  });
+
+  it("supports native contexts that are not EventTargets", () => {
+    const nativeContext = {
+      addEventListener: undefined,
+      removeEventListener: undefined,
+    } as unknown as ModelContext;
+
+    const unsubscribe = subscribeToToolChanges(nativeContext, () => undefined);
+    expect(() => unsubscribe()).not.toThrow();
   });
 });

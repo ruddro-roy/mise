@@ -14,13 +14,17 @@ function miseApi() {
     name: "mise-live-api",
     configureServer(server: { middlewares: { use: Function } }) {
       server.middlewares.use((req: { url?: string }, res: unknown, next: () => void) => {
-        if (!req.url?.startsWith("/api")) return next();
+        if (!req.url?.startsWith("/api") && !req.url?.startsWith("/mcp")) {
+          return next();
+        }
         return api(req as never, res as never);
       });
     },
     configurePreviewServer(server: { middlewares: { use: Function } }) {
       server.middlewares.use((req: { url?: string }, res: unknown, next: () => void) => {
-        if (!req.url?.startsWith("/api")) return next();
+        if (!req.url?.startsWith("/api") && !req.url?.startsWith("/mcp")) {
+          return next();
+        }
         return api(req as never, res as never);
       });
     },

@@ -2,13 +2,13 @@
 
 Target: one take, under 3 minutes, recorded against the live site in ChatGPT's in-app browser. Every line below is either something you say or something you do. No improvisation.
 
-Setup before recording: ChatGPT on GPT-5.6 Sol or Terra (Luna has WebMCP off). Close other tabs. Have https://mise-studio.ruddro-roy.chatgpt.site ready to paste.
+Setup before recording: ChatGPT on GPT-5.6 Sol or Terra (Luna has WebMCP off). Close other tabs. Have https://mise-studio.ruddro-roy.chatgpt.site ready to paste. The optional remote MCP plugin can be preinstalled from `https://mise-studio.ruddro-roy.chatgpt.site/mcp`, but keep the main recording focused on native WebMCP because that is the challenge path.
 
 ## Beats
 
-0:00 Hook. Say: "This is Mise. It plans a dinner party with you on one shared table. The page publishes its own tools, so the agent works the same screen you do." Open the site root in ChatGPT's in-app browser. The studio paints. Point at the header badge: "Native WebMCP. No plugin, no server, no install."
+0:00 Hook. Say: "This is Mise. It plans a dinner party with you on one shared table. The page publishes its own tools, so the agent works the same screen you do." Open the site root in ChatGPT's in-app browser. The studio paints. Point at the header badge: "Native WebMCP. The challenge flow needs no install."
 
-0:20 Tool discovery. Open Site tools in the ChatGPT address bar. Scroll the list. Say: "The page registers about 25 tools on document.modelContext. ChatGPT found them by loading the page. lock_menu, add_guest, get_workspace_state, all live."
+0:20 Tool discovery. Open Site tools in the ChatGPT address bar. Scroll the list. Say: "The page keeps 25 tools live, then adds a read lens for the panel I open. ChatGPT found them by loading the page. lock_menu, add_guest, get_workspace_state, all live."
 
 0:40 The plan. Type to ChatGPT: "Plan Saturday dinner for 8. Two guests are vegan. Maya has a nut allergy. Budget is $90. Italian, warm and unfussy." Stay quiet while it runs. As panels fill, narrate: "Brief, guests, menu, market list, seating. Each of those was a tool call. The studio is the tool output."
 
@@ -20,7 +20,7 @@ Setup before recording: ChatGPT on GPT-5.6 Sol or Terra (Luna has WebMCP off). C
 
 2:20 Persistence. Click Copy live link. Refresh the page. Say: "The party lives at /p/ plus an id in D1. Refresh, reopen, send the link to a roommate. Same table."
 
-2:40 Close. Say: "Mise is WebMCP as it is meant to be used. The page owns the tools, the agent uses them, the human holds the gate. Repo at github.com/ruddro-roy/mise." End recording.
+2:40 Close. Say: "Mise is WebMCP as it is meant to be used. The page owns the tools, the agent uses them, the human holds the gate. Judges can also install the same workspace from the public MCP URL in the README. Repo at github.com/ruddro-roy/mise." End recording.
 
 ## If a beat fails on camera
 

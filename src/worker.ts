@@ -5,6 +5,7 @@ import { localMemoryStore } from "./lib/live/store-memory";
 import { sanitizeWorkspace } from "./lib/live/schema";
 import type { PartyStore } from "./lib/live/types";
 import type { Workspace } from "./lib/domain/types";
+import { createPartyService, handleMcpRequest } from "./lib/mcp/server";
 
 export type WorkerEnv = {
   DB?: D1Database;
@@ -49,6 +50,13 @@ export function createApp(defaultStore?: PartyStore) {
   const lockPartyWrite = createPartyWriteLock();
 
   const resolveStore = (env: WorkerEnv | undefined) => defaultStore ?? storeFor(env);
+
+  app.all("/mcp", (c) =>
+    handleMcpRequest(
+      c.req.raw,
+      createPartyService(resolveStore(c.env), newPartyId, lockPartyWrite),
+    ),
+  );
 
   app.get("/api/health", (c) => {
     const who = identity(c);
